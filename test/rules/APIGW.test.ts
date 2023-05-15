@@ -3,6 +3,7 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 */
 import {
+  ApiDefinition,
   AuthorizationType,
   CfnClientCertificate,
   CfnRequestValidator,
@@ -10,6 +11,7 @@ import {
   CfnStage,
   MethodLoggingLevel,
   RestApi,
+  SpecRestApi,
 } from 'aws-cdk-lib/aws-apigateway';
 import { CfnRoute, CfnStage as CfnV2Stage } from 'aws-cdk-lib/aws-apigatewayv2';
 import { CfnWebACLAssociation } from 'aws-cdk-lib/aws-wafv2';
@@ -284,6 +286,43 @@ describe('Amazon API Gateway', () => {
       });
       validateStack(stack, ruleId, TestType.COMPLIANCE);
     });
+  });
+
+  describe('APIGWRequestValidation: Spec Rest APIs have request validation enabled', () => {
+    const ruleId = 'APIGWRequestValidation';
+    test('Noncompliance 1', () => {
+      new SpecRestApi(stack, 'SpecRestApi', {
+        apiDefinition: ApiDefinition.fromAsset(
+          './test/rules/APIGW.openapi.yaml'
+        ),
+      });
+      validateStack(stack, ruleId, TestType.NON_COMPLIANCE);
+    });
+    // test('Noncompliance 2', () => {
+    //   new RestApi(stack, 'RestApi').root.addMethod('ANY');
+    //   new CfnRequestValidator(stack, 'RequestVAlidator', {
+    //     restApiId: 'foo',
+    //     validateRequestBody: true,
+    //     validateRequestParameters: false,
+    //   });
+    //   validateStack(stack, ruleId, TestType.NON_COMPLIANCE);
+    // });
+    // test('Compliance', () => {
+    //   const compliantRestApi = new RestApi(stack, 'RestApi');
+    //   compliantRestApi.addRequestValidator('RequestValidator', {
+    //     validateRequestBody: true,
+    //     validateRequestParameters: true,
+    //   });
+    //   compliantRestApi.root.addMethod('ANY');
+    //   const compliantRestApi2 = new RestApi(stack, 'RestApi2');
+    //   compliantRestApi2.root.addMethod('ANY');
+    //   new CfnRequestValidator(stack, 'RequestValidator2', {
+    //     restApiId: compliantRestApi2.restApiId,
+    //     validateRequestBody: true,
+    //     validateRequestParameters: true,
+    //   });
+    //   validateStack(stack, ruleId, TestType.COMPLIANCE);
+    // });
   });
 
   describe('APIGWSSLEnabled: API Gateway REST API stages are configured with SSL certificates', () => {

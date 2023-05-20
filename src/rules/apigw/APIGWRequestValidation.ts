@@ -19,18 +19,23 @@ export default Object.defineProperty(
         node.ref
       );
       let found = false;
-      for (const child of Stack.of(node).node.findAll()) {
-        if (child instanceof CfnRequestValidator) {
-          if (isMatchingRequestValidator(child, apiLogicalId)) {
-            found = true;
-            break;
+      if (isRestApiFromSpec(node)) {
+        console.log('isRestApiFromSpec', isRestApiFromSpec);
+        return NagRuleCompliance.NON_COMPLIANT;
+      } else {
+        for (const child of Stack.of(node).node.findAll()) {
+          if (child instanceof CfnRequestValidator) {
+            if (isMatchingRequestValidator(child, apiLogicalId)) {
+              found = true;
+              break;
+            }
           }
         }
+        if (!found) {
+          return NagRuleCompliance.NON_COMPLIANT;
+        }
+        return NagRuleCompliance.COMPLIANT;
       }
-      if (!found) {
-        return NagRuleCompliance.NON_COMPLIANT;
-      }
-      return NagRuleCompliance.COMPLIANT;
     } else {
       return NagRuleCompliance.NOT_APPLICABLE;
     }
@@ -58,4 +63,7 @@ function isMatchingRequestValidator(
     Stack.of(node).resolve(node.validateRequestBody) === true &&
     Stack.of(node).resolve(node.validateRequestParameters) === true
   );
+}
+function isRestApiFromSpec(node: CfnRestApi): boolean {
+  return Stack.of(node).resolve(node.bodyS3Location);
 }
